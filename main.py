@@ -11,7 +11,7 @@ from hashlib import sha1
 from collections import namedtuple, Counter
 
 import requests
-requests.packages.urllib3.disable_warnings()
+#requests.packages.urllib3.disable_warnings()
 
 import seaborn as sns
 import matplotlib as mpl
