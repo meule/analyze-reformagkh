@@ -119,7 +119,7 @@ def jobs_manager():
     from IPython.lib.backgroundjobs import BackgroundJobManager
     from IPython.core.magic import register_line_magic
     from IPython import get_ipython
-    
+
     jobs = BackgroundJobManager()
 
     @register_line_magic
@@ -132,7 +132,7 @@ def jobs_manager():
 
 def kill_thread(thread):
     import ctypes
-    
+
     id = thread.ident
     code = ctypes.pythonapi.PyThreadState_SetAsyncExc(
         ctypes.c_long(id),
@@ -152,7 +152,7 @@ def get_chunks(sequence, count):
     count = min(count, len(sequence))
     chunks = [[] for _ in range(count)]
     for index, item in enumerate(sequence):
-        chunks[index % count].append(item) 
+        chunks[index % count].append(item)
     return chunks
 
 def hash_url(url):
@@ -307,7 +307,7 @@ def load_raw_subregions(regions):
 def load_json_data(path):
     with open(path) as file:
         return cjson.decode(file.read())
-    
+
 
 def dump_json_data(data, path):
     with open(path, 'w') as file:
@@ -388,7 +388,7 @@ def parse_region_list(html, region=None):
         if company == u'Не заполнено':
             company = None
         yield RegionListRecord(region, id, address, year, area, company)
-    
+
 
 def load_raw_region_lists(regions):
     for region in regions:
@@ -507,7 +507,7 @@ def parse_building_profile_measures(data):
         appartments, entrances, elevators,
         area_meters, parking_meters
     )
-    
+
 
 def parse_building_profile_types(data):
     type = data.get(u'Тип дома')
@@ -588,7 +588,7 @@ def dump_profile(profile):
     ]
     path = get_profile_path(id)
     dump_json_data(data, path)
-    
+
 
 def preparse_profile(result):
     id = result.id
@@ -686,6 +686,7 @@ def dump_data(profiles):
         if coordinates and coordinates not in cache:
             cache.add(coordinates)
             longitude, latitude = coordinates
+            id = profile.id
             year = profile.when_was.opened
             if not 1900 <= year <= 2015:
                 year = None
@@ -712,6 +713,7 @@ def dump_data(profiles):
                 parking = parking > 0
             type_of = profile.type_of
             data.append((
+                id,
                 longitude,
                 latitude,
                 year,
@@ -723,6 +725,14 @@ def dump_data(profiles):
             ))
     table = pd.DataFrame(
         sample(data, 500000),
-        columns=['latitude', 'longitude', 'year', 'floors',
+        columns=['id', 'latitude', 'longitude', 'year', 'floors',
                  'appartments', 'parking', 'repair', 'energy'])
     table.to_csv(DATA, index=False)
+
+
+
+jobs = jobs_manager()
+regions = list(load_regions())
+search_results = list(load_region_lists(regions))
+profiles = list(load_profiles(log_progress(search_results, every=100), regions))
+dump_data(profiles)
